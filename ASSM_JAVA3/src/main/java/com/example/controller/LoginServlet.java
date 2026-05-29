@@ -19,28 +19,31 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Hiển thị form đăng nhập
         request.getRequestDispatcher("login.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Nhận dữ liệu từ form
         String id = request.getParameter("id");
         String password = request.getParameter("password");
 
         User user = userDAO.login(id, password);
 
         if (user != null) {
-            // Đăng nhập thành công -> lưu vào session
             HttpSession session = request.getSession();
             session.setAttribute("user", user);
 
-            // Chuyển hướng về trang chủ
-            response.sendRedirect("home");
+            // Debug để kiểm tra role
+            System.out.println("Đăng nhập: " + user.getId() + " | Role=" + user.isRole());
+
+            // Phân quyền: Role=1 → admin.jsp, Role=0 → reporter.jsp
+            if (user.isRole()) {
+                request.getRequestDispatcher("admin.jsp").forward(request, response);
+            } else {
+                request.getRequestDispatcher("reporter.jsp").forward(request, response);
+            }
         } else {
-            // Sai tài khoản hoặc mật khẩu
             request.setAttribute("message", "Sai tài khoản hoặc mật khẩu!");
             request.getRequestDispatcher("login.jsp").forward(request, response);
         }
